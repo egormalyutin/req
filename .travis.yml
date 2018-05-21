@@ -8,11 +8,6 @@ script: cake -m build
 deploy:
   provider: releases
 
-  before_deploy:
-      - git config --local user.name "malyutinegor"
-      - git config --local user.email "malyutinea@inbox.ru"
-      - git tag "$(date +'%Y.%m.%d %H:%M:%S build')"
-
   api_key:
     secure: JiI+k0NKVtpRfwIqWGRA4TybXFkPABlbuPfHZrCIPyoYPL3/ttKs6LPd4M0cEDM/3/cWZpwMr0H1VIYVfnsJqebhMUleRryM5mPhFc8zqNxQaFNVv5YkgPMD90UUXTySO2OejVP/75PYcCwdIyuof++lo/LejGJy3Pl5a4OAN/bKZ06f1Ei1I/QOncBVVpG+MG5kq3aef7gpP6HfjNUnGdYBUth5YUSmv3L/bHLbEQoPLaMHTz5wjIf5FrACprSqTpOsCOjTZNmBW4uLuAwejJeBA6ZtmNnaVvwGZKo3jO/AoTq+FVxV1qCqPU2/VqdES0iDSQIBZ8kNMxrVrKyGn0HsC7vlCqir5he0MjK+4MENRX2L3WoPLjd8rSaLN5MgaOCuJKqObsG/GHtvEq8yXtc9OA7sjoHfbBV+ktIBQ0+8N68gx4JFQ4tzWS/2j0Sy8SQGoFT4L1Zby/bgQj3UzGwW83woi7bX3g0TYUE1CaAPUG4VjYdahGs1nAFrIp57OrQaTxcTze70l5nzzR9acjmP85YEHkRZ6eUWvIh4BkKR3cjUjXbO3wJq4tueERSAJA2P1KqTZ0yjCdIFSHBOmgrUZusfk0asY/aOil+Sg4gnomzJ6qNGz10ExgWNieCJbo4OqoCyXoPmNMTUDychpM+RcLE2bvpQVxdBF7bcNX0=
 
@@ -21,6 +16,3 @@ deploy:
     - "build/req.min.js"
 
   skip_cleanup: true
-
-  on:
-    tags: false
