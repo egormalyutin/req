@@ -41,7 +41,9 @@ require = do ->
 	##### PATHS #####
 	#################
 
+	# resolve a sequence of paths
 	# example:
+	# -09`1
 	# resolve("a", "./b", "./c/d", "../e") => "a/b/c/e"
 	resolve = (paths...) ->
 		chain = []
@@ -66,6 +68,7 @@ require = do ->
 
 		return firstSep + chain.join "/"
 
+	# get dirname of path
 	getDirname = (path) ->
 		return path.replace(/\\/g,'/').replace(/\/[^\/]*$/, '');
 
