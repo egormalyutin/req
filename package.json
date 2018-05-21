@@ -1,0 +1,19 @@
+{
+  "name": "req",
+  "version": "0.0.1",
+  "description": "Require.JS in 100 lines",
+  "main": "req.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "coffeescript": "^2.3.0",
+    "gaze": "^1.1.2",
+    "uglify-es": "^3.3.9"
+  },
+}
