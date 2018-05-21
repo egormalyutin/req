@@ -81,7 +81,7 @@ require = do ->
 
 		# message
 		if firstRequest and result.require.message
-			console.log "Sorry, but req.js needs sync requests. If you don't want to use sync requests, you can use requre.async or Require.JS. You can turn off this message by 'require.message = false'."
+			console.log "Sorry, but req.js needs sync requests for sync mode. If you don't want to use sync requests, you can use requre.async or Require.JS. You can turn off this message by 'require.message = false'."
 			firstRequest = false
 
 		# check status
@@ -108,35 +108,40 @@ require = do ->
 
 	mainSymbol = {}
 
+	# init new module
+	initModule = (root, localPath) ->
+		# type check
+		if typeof localPath isnt "string"
+			throw new TypeError "Path must be string, got #{typeof localPath}"
+
+		# if this require is require from file, not from module
+		if root is mainSymbol
+			path = resolve getDirname(getCurrentScript().src or ""), localPath
+		else
+			path = resolve root, localPath
+
+		# paths
+		path += ".js" unless endsWith path, ".js"
+		dirname = getDirname path
+
+		# find cache
+		return cache[path].exports if cache[path]
+			
+		# init module
+		module = { 
+			id: path
+			filename: path
+			loaded: false
+			exports: {}
+		}
+
+		return [module, path, dirname]
+
 	# create new require() function
 	makeRequire = (root) ->
 		rq = (localPath) ->
-			# type check
-			if typeof localPath isnt "string"
-				throw new TypeError "Path must be string, got #{typeof localPath}"
+			[module, path, dirname] = initModule root, localPath
 
-			# if this require is require from file, not from module
-			if root is mainSymbol
-				path = resolve getDirname(getCurrentScript().src or ""), localPath
-			else
-				path = resolve root, localPath
-
-			# paths
-			path += ".js" unless endsWith path, ".js"
-			dirname = getDirname path
-
-			# find cache
-			return cache[path].exports if cache[path]
-				
-			# init module
-			module = { 
-				id: path
-				filename: path
-				loaded: false
-				exports: {}
-			}
-
-			# download code
 			code = requestSync path
 
 			# execute code of module
@@ -148,30 +153,7 @@ require = do ->
 			return module.exports
 
 		rq.async = (localPath) ->
-			# type check
-			if typeof localPath isnt "string"
-				throw new TypeError "Path must be string, got #{typeof localPath}"
-
-			# if this require is require from file, not from module
-			if root is mainSymbol
-				path = resolve getDirname(getCurrentScript().src or ""), localPath
-			else
-				path = resolve root, localPath
-
-			# paths
-			path += ".js" unless endsWith path, ".js"
-			dirname = getDirname path
-
-			# find cache
-			return cache[path].exports if cache[path]
-				
-			# init module
-			module = { 
-				id: path
-				filename: path
-				loaded: false
-				exports: {}
-			}
+			[module, path, dirname, code] = initModule root, localPath
 
 			# download code
 			code = await requestAsync path
