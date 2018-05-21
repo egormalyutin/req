@@ -1,9 +1,4 @@
 require = do ->
-
-	#####################	
-	##### VARIABLES #####
-	#####################	
-
 	global = window
 	cache = {}
 	result = {}
@@ -43,7 +38,6 @@ require = do ->
 
 	# resolve a sequence of paths
 	# example:
-	# -09`1
 	# resolve("a", "./b", "./c/d", "../e") => "a/b/c/e"
 	resolve = (paths...) ->
 		chain = []
@@ -79,15 +73,15 @@ require = do ->
 	firstRequest = true
 
 	# do sync request
-	request = (url) ->
+	requestSync = (url) ->
 		xhr = new XMLHttpRequest
 		xhr.open "GET", url, false
-		xhr.overrideMimeType "text/plain"
+		xhr.overrideMimeType "text/javascript"
 		xhr.send null
 
 		# message
 		if firstRequest and result.require.message
-			console.log "Sorry, but req.js needs sync requests. If you don't want to use sync requests, you can try Require.JS. You can turn off this message by 'require.message = false'."
+			console.log "Sorry, but req.js needs sync requests. If you don't want to use sync requests, you can use requre.async or Require.JS. You can turn off this message by 'require.message = false'."
 			firstRequest = false
 
 		# check status
@@ -95,6 +89,18 @@ require = do ->
 			throw new Error "Failed to load URL #{url}"
 		else
 			return xhr.responseText
+
+	# do async request
+	requestAsync = (url) ->
+		return new Promise (r) ->
+			xhr = new XMLHttpRequest
+			xhr.onreadystatechange = ->
+				if xhr.readyState is 4 and xhr.status is 200
+					r xhr.responseText
+
+			xhr.open "GET", url, true
+			xhr.overrideMimeType "text/javascript"
+			xhr.send null
 
 	################
 	##### MAIN #####
@@ -111,7 +117,7 @@ require = do ->
 
 			# if this require is require from file, not from module
 			if root is mainSymbol
-				path = resolve getDirname(getCurrentScript().src), localPath
+				path = resolve getDirname(getCurrentScript().src or ""), localPath
 			else
 				path = resolve root, localPath
 
@@ -131,13 +137,53 @@ require = do ->
 			}
 
 			# download code
-			code = request path
+			code = requestSync path
 
 			# execute code of module
 			(new Function "global, module, exports, require, __dirname, __filename", code).call(global, global, module, module.exports, makeRequire(dirname), dirname, path)
 
-			# cache module
 			cache[module.id] = module
+			module.loaded = true
+
+			return module.exports
+
+		rq.async = (localPath) ->
+			# type check
+			if typeof localPath isnt "string"
+				throw new TypeError "Path must be string, got #{typeof localPath}"
+
+			# if this require is require from file, not from module
+			if root is mainSymbol
+				path = resolve getDirname(getCurrentScript().src or ""), localPath
+			else
+				path = resolve root, localPath
+
+			# paths
+			path += ".js" unless endsWith path, ".js"
+			dirname = getDirname path
+
+			# find cache
+			return cache[path].exports if cache[path]
+				
+			# init module
+			module = { 
+				id: path
+				filename: path
+				loaded: false
+				exports: {}
+			}
+
+			# download code
+			code = await requestAsync path
+
+			# execute code of module
+			await (new Function "global, module, exports, require, __dirname, __filename", 
+				"return (async function() { " + code + " })"
+			).call(global, global, module, module.exports, makeRequire(dirname), dirname, path)()
+
+			cache[module.id] = module
+			module.loaded = true
+
 			return module.exports
 
 		rq.cache = cache
